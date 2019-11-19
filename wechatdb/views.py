@@ -30,14 +30,18 @@ def query_by_score(table, maxscore, minscore):
                         table.admission_score.desc())
 
 # 按分数查询一分一段表
-def query_rank_by_score(table, score):
+def query_rank_by_score(table, maxscore, minscore):
     return table.query.filter(
-                table.score == score).order_by(
+                table.score <= maxscore,
+                table.score >= minscore).order_by(
                     table.year.desc())
 
 # 查询所一分一段表所有记录
-def query_rank(table):
-    return table.query.order_by(
+def query_rank_by_year(table, maxscore, minscore, year):
+    return table.query.filter(
+                table.year == year,
+                table.score <= maxscore,
+                table.score >= minscore).order_by(
                 table.year.desc())
 
 #文理科通用查询成绩路由函数
@@ -99,40 +103,23 @@ def base_query_admission(table, science):
 # 文理科通用查询一分一段表
 def base_query_rank(table, science):
     if science == 0:
-        score = session.get('science_score')
-        year = session.get('science_year')
+        maxscore = session.get('science_rank_maxscore')
+        minscore = session.get('science_rank_minscore')
+        year = session.get('science_rank_year')
     else:
-        score = session.get('liberalarts_score')
-        year = session.get('liberalarts_year')
+        maxscore = session.get('liberalarts_rank_maxscore')
+        minscore = session.get('liberalarts_rank_minscore')
+        year = session.get('liberalarts_rank_year')
 
     if year == "*":
-        # 查询所有年份的一分一段表
-        if score != "*":
-            # 在所有年份中，查询指定分数的人数
-            flash("按分数：{}分查询一分一段表".format(score))
-            tables = query_rank_by_score(table, score)
-            return tables
-        else:
-            # 在所有年份中，查询所有一分一段表
-            flash("查询全部一分一段表")
-            tables = query_rank(table)
-            return tables
+        # 在所有年份中，查询指定分数的人数
+        tables = query_rank_by_score(table, maxscore, minscore)
+        return tables
     else:
-        # 查询指定年份的一分一段表
-        if score != "*":
-            # 在指定年份中，查询指定分数的人数
-            flash("按分数：{}，查询{}年一分一段表".format(score, year))
-            tables = query_rank_by_score(table, score).filter(
-                table.year == year).order_by(
-                    table.year.desc())
-            return tables
-        else:
-            # 在指定年份中，查询所有一分一段表
-            flash("查询{}年一分一段表".format(year))
-            tables = query_rank(table).filter(
-                table.year == year).order_by(
-                    table.year.desc())
-            return tables     
+        # 在指定年份中，查询所有一分一段表
+        tables = query_rank_by_score(table, maxscore, minscore).filter(
+                table.year == year)
+        return tables     
 
 
 """进行验证是否来自微信服务器"""
@@ -166,9 +153,8 @@ def science():
     html_url = 'science.html'
 
     #初始化查询返回值变量为空，如果查询结果为空，则返回空值
-
     queryResult = []
-
+    rts=[]
     if request.method == 'POST': 
         session['science_schoolname'] = request.values.get("schoolname")
         session['science_maxscore'] = request.values.get("maxscore")
@@ -178,8 +164,6 @@ def science():
     if session.get('science_schoolname'):
         queryResult = base_query_admission(tbl_admission, 0).all()
 
-    
-    rts=[]
     for item in queryResult:
         temp=dict(schoolserial=item.school_serial, 
             schoolname=item.school_name,
@@ -195,61 +179,72 @@ def science():
 @app.route('/sciencerank', methods=['GET', 'POST'])
 def sciencerank():
     html_url = 'sciencerank.html'
-    page=request.args.get('page',1,type=int)
-
+    #初始化查询返回值变量为空，如果查询结果为空，则返回空值
+    queryResult = []
+    rts=[]
     if request.method == 'POST': 
-        session['science_score'] = request.form.get('score')
-        session['science_year'] = request.form.get('year')
+        session['science_rank_maxscore'] = request.values.get('maxscore')
+        session['science_rank_minscore'] = request.values.get('minscore')
+        session['science_rank_year'] = request.values.get('year')
+        queryResult = base_query_rank(tbl_rank, 0).all()
 
-    if session.get('science_score'):
-        pagination = base_query_rank(tbl_rank, 0).paginate(
-            page,per_page=app.config['ITEMS_PER_PAGE'] ,error_out=False)
-            
-        if pagination:
-            return render_template(html_url, pagination=pagination)
-        else:
-            return render_template(html_url)
+    for item in queryResult:
+        temp=dict(score=item.score, 
+            studentwithin=item.student_within,
+            studentsum=item.student_sum, 
+            year=item.year)
+        rts.append(temp)
 
-    return render_template(html_url)
+    return json.dumps(rts,ensure_ascii=False, default=Alchemyencoder) 
+
 
 # 查询文科成绩路由
 @app.route('/liberalarts', methods=['GET', 'POST'])
 def liberalarts():
     html_url = 'liberalarts.html'
-    page=request.args.get('page',1,type=int)
 
+    #初始化查询返回值变量为空，如果查询结果为空，则返回空值
+    queryResult = []
+    rts=[]
     if request.method == 'POST': 
-        session['liberalarts_schoolname'] = request.form.get('schoolname')
-        session['liberalarts_maxscore'] = request.form.get('maxscore')
-        session['liberalarts_minscore'] = request.form.get('minscore')
-        session['liberalarts_year'] = request.form.get('year')
+        session['liberalarts_schoolname'] = request.values.get("schoolname")
+        session['liberalarts_maxscore'] = request.values.get("maxscore")
+        session['liberalarts_minscore'] = request.values.get("minscore")
+        session['liberalarts_year'] = request.values.get("year")
 
     if session.get('liberalarts_schoolname'):
-        pagination = base_query_admission(tbl_admission_liberalart, 1).paginate(
-            page,per_page=app.config['ITEMS_PER_PAGE'] ,error_out=False)
-        if pagination:
-            return render_template(html_url, pagination=pagination)
-        else:
-            return render_template(html_url)
+        queryResult = base_query_admission(tbl_admission_liberalart, 1).all()
 
-    return render_template(html_url)
+    for item in queryResult:
+        temp=dict(schoolserial=item.school_serial, 
+            schoolname=item.school_name,
+            admissionscore=item.admission_score, 
+            year=item.admission_year,
+            #school_related_batch是外链
+            batch=item.school_related_batch.batch_name)
+        rts.append(temp)
+
+    return json.dumps(rts,ensure_ascii=False, default=Alchemyencoder) 
+
     
 # 查询文科一分一段表路由
 @app.route('/liberalartsrank', methods=['GET', 'POST'])
 def liberalartsrank():
     html_url = 'liberalartsrank.html'
-    page=request.args.get('page',1,type=int)
-
+    #初始化查询返回值变量为空，如果查询结果为空，则返回空值
+    queryResult = []
+    rts=[]
     if request.method == 'POST': 
-        session['liberalarts_score'] = request.form.get('score')
-        session['liberalarts_year'] = request.form.get('year')
+        session['liberalarts_rank_maxscore'] = request.values.get("maxscore")
+        session['liberalarts_rank_minscore'] = request.values.get("minscore")
+        session['liberalarts_rank_year'] = request.values.get("year")
+        queryResult = base_query_rank(tbl_rank_liberalart, 1).all()
 
-    if session.get('liberalarts_score'):
-        pagination = base_query_rank(tbl_rank_liberalart, 1).paginate(
-            page,per_page=app.config['ITEMS_PER_PAGE'] ,error_out=False)
-        if pagination:
-            return render_template(html_url, pagination=pagination)
-        else:
-            return render_template(html_url)
+    for item in queryResult:
+        temp=dict(score=item.score, 
+            studentwithin=item.student_within,
+            studentsum=item.student_sum, 
+            year=item.year)
+        rts.append(temp)
 
-    return render_template(html_url )
+    return json.dumps(rts,ensure_ascii=False, default=Alchemyencoder) 

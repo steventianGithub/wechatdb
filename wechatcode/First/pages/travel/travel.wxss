@@ -1,0 +1,59 @@
+.inputviewcontent {
+  margin-left: 20rpx;
+  margin-bottom: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 14px;
+}
+
+.inputtitle{
+  width:200rpx;
+  text-align: right;
+}
+
+.input {
+  width: 60%;
+  border: 1px solid #e9e9e9;
+}
+
+.inputitem {
+  margin: 1px;
+  display: flex;
+  flex-direction: row;
+  width: 80%;
+}
+
+.table {
+  border: 1px solid #dadada;
+  border-right: 0;
+  border-bottom: 0;
+  width: 98%;
+  font-size: 10px;
+}
+
+.tr {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  text-align: right;
+}
+
+.th, .td {
+  padding: 10px;
+  border-bottom: 1px solid #dadada;
+  border-right: 1px solid #dadada;
+  text-align: center;
+  width: 100%;
+}
+
+.th {
+  font-weight: 400;
+  background-color: #dadada;
+}
+
+.btn_area {
+  width: 100rps;
+  margin-bottom: 20rpx;
+  font-size: 10rpx;
+}

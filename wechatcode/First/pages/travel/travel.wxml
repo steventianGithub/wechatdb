@@ -1,0 +1,78 @@
+<view class="content">
+  <form bindsubmit="formSubmit" bindreset="formReset">
+    <view class="inputviewcontent">
+
+      <view class="inputitem">
+        <view class="inputtitle">学校名称：</view>
+        <input name="schoolname" class="input" auto-focus placeholder="在此输入学校名称" value="*" disabled="{{rankOrAdmission}}"/>
+      </view>
+
+      <view class="inputitem">
+        <view class="inputtitle">最高分：</view>
+        <input name="maxscore" class="input" placeholder="在此输入录取最高分" value="600" />
+      </view>
+
+      <view class="inputitem">
+        <view class="inputtitle">最低分：</view>
+        <input name="minscore" class="input" placeholder="在此输入录取最低分" value="500" />
+      </view>
+
+      <view class="inputitem">
+        <view class="inputtitle">录取年份：</view>
+        <input name="year" class="input" placeholder="在此输入录取年份" value="*" />
+      </view>
+
+      <radio-group name="scienceorliberalarts">
+        <label>
+          <radio value="science" checked/>理科</label>
+        <label>
+          <radio value="liberalarts" />文科</label>
+      </radio-group>
+
+      <radio-group name="rankoradmission" bindchange="changeRankOrAdmission">
+        <label>
+          <radio value="admission" checked/>高校录取成绩</label>
+        <label>
+          <radio value="rank" />一分一段表</label>
+      </radio-group>
+    </view>
+    <view class="btn_area">
+      <button formType="submit" type="primary">查询</button>
+    </view>
+  </form>
+
+  <view wx:if="{{rankOrAdmission == false}}">
+    <view class="table">
+      <view class="tr">
+        <view class="th">学校代码</view>
+        <view class="th">学校名称</view>
+        <view class="th">录取分数</view>
+        <view class="th">录取年份</view>
+        <view class="th">录取批次</view>
+      </view>
+      <view class="tr" wx:for="{{res}}" wx:for-item="item">
+        <view class="td">{{item.schoolserial}}</view>
+        <view class="td">{{item.schoolname}}</view>
+        <view class="td">{{item.admissionscore}}</view>
+        <view class="td">{{item.year}}</view>
+        <view class="td">{{item.batch}}</view>
+      </view>
+    </view>
+  </view>
+  <view wx:else>
+  <view class="table">
+      <view class="tr">
+        <view class="th">分数</view>
+        <view class="th">人数</view>
+        <view class="th">累计</view>
+        <view class="th">年份</view>
+      </view>
+      <view class="tr" wx:for="{{res}}" wx:for-item="item">
+        <view class="td">{{item.score}}</view>
+        <view class="td">{{item.studentwithin}}</view>
+        <view class="td">{{item.studentsum}}</view>
+        <view class="td">{{item.year}}</view>
+      </view>
+    </view>
+  </view>
+</view>
