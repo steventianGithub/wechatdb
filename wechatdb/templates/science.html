@@ -1,0 +1,27 @@
+
+{% block title %}辽宁省历年理科录取信息查询{% endblock %}
+
+
+<br>
+{% if queryResult %}
+    <font size="4">查询结果</font>
+    <table border="1">
+        <tr>
+            <th>学校名称</th>
+            <th>录取分数</th>
+            <th>录取年份</th>
+            <th>录取批次</th>
+            <th>批次年份</th>
+        </tr>
+
+        {% for tbl_admission in queryResult %} {# 迭代tbl_admissions变量 #}
+            <tr>
+                <td width=200>{{ tbl_admission.school_name }}</td>
+                <td width=100>{{ tbl_admission.admission_score }}</td>
+                <td width=100>{{ tbl_admission.admission_year }}</td>
+                <td width=100>{{ tbl_admission.school_related_batch.batch_name }}</td>
+                <td width=100>{{ tbl_admission.school_related_batch.year }}</td>
+            </tr>
+        {% endfor %} {# 使用endfor标签结束for语句 #}
+    </table>
+{% endif %}
