@@ -134,11 +134,12 @@ def base_query_rank(table, science):
                     table.year.desc())
             return tables     
 
+
+"""进行验证是否来自微信服务器"""
+"""
 @app.before_request
 def check_source():
 
-    """进行验证是否来自微信服务器"""
-    """
     signature = request.args.get('signature')
     timestamp = request.args.get('timestamp')
     nonce = request.args.get('nonce')
@@ -149,8 +150,9 @@ def check_source():
     tmp = hashlib.sha1(tmp).hexdigest()
     if tmp != signature:
         return 'error'
-    """
+
     return
+"""
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
@@ -176,7 +178,18 @@ def science():
     if session.get('science_schoolname'):
         queryResult = base_query_admission(tbl_admission, 0).all()
 
-    return json.dumps([dict(r) for r in dict(queryResult)], ensure_ascii=False, default=Alchemyencoder)
+    
+    rts=[]
+    for item in queryResult:
+        temp=dict(schoolserial=item.school_serial, 
+            schoolname=item.school_name,
+            admissionscore=item.admission_score, 
+            year=item.admission_year,
+            #school_related_batch是外链
+            batch=item.school_related_batch.batch_name)
+        rts.append(temp)
+
+    return json.dumps(rts,ensure_ascii=False, default=Alchemyencoder) 
 
 # 查询理科一分一段表路由
 @app.route('/sciencerank', methods=['GET', 'POST'])
