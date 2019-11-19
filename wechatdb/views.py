@@ -7,29 +7,12 @@ from sqlalchemy.ext.declarative import DeclarativeMeta
 import json
 import decimal, datetime
 
-class AlchemyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj.__class__, DeclarativeMeta):
-            # an SQLAlchemy class
-            fields = {}
-            for field in [x for x in dir(obj) if not x.startswith('_') and x != 'metadata']:
-                data = obj.__getattribute__(field)
-                try:
-                    json.dumps(data)     # this will fail on non-encodable values, like other classes
-                    fields[field] = data
-                except TypeError:    # 添加了对datetime的处理
-                    if isinstance(data, datetime.datetime):
-                        fields[field] = data.isoformat()
-                    elif isinstance(data, datetime.date):
-                        fields[field] = data.isoformat()
-                    elif isinstance(data, datetime.timedelta):
-                        fields[field] = (datetime.datetime.min + data).time().isoformat()
-                    else:
-                        fields[field] = None
-            # a json-encodable dict
-            return fields
- 
-        return json.JSONEncoder.default(self, obj)
+def Alchemyencoder(obj):
+    """JSON encoder function for SQLAlchemy special classes."""
+    if isinstance(obj, datetime.date):
+        return obj.isoformat()
+    elif isinstance(obj, decimal.Decimal):
+        return float(obj)
 
 # 按学校查询录取结果， 返回值先按年份排序再按分数排序
 def query_by_school(table, schoolname):
@@ -38,7 +21,7 @@ def query_by_school(table, schoolname):
                     table.admission_year.desc()).order_by(
                         table.admission_score.desc())
 
-# 按分数查询录取结果， 返回值先按年份排序再按分数排序
+# 按分数查询录取结果， 返回值先按年份排序再按分数排序A
 def query_by_score(table, maxscore, minscore):
     return table.query.filter(
                 table.admission_score <= maxscore, 
@@ -193,19 +176,7 @@ def science():
     if session.get('science_schoolname'):
         queryResult = base_query_admission(tbl_admission, 0).all()
 
-    rts=[]
-
-    for item in queryResult:
-        temp=dict(schoolserial=item.school_serial, 
-            schoolname=item.school_name,
-            admissionscore=item.admission_score, 
-            year=item.admission_year,
-            #school_related_batch是外链
-            batch=item.school_related_batch.batch_name)
-        rts.append(temp)
-
-    #rts = json.dumps(queryResult, cls=AlchemyEncoder,ensure_ascii=False)
-    return json.dumps(rts,ensure_ascii=False) 
+    return json.dumps([dict(r) for r in dict(queryResult)], ensure_ascii=False, default=Alchemyencoder)
 
 # 查询理科一分一段表路由
 @app.route('/sciencerank', methods=['GET', 'POST'])
