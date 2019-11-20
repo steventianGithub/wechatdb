@@ -1,4 +1,4 @@
-// pages/travel/travel.js
+// pages/ceequery/ceequery.js
 Page({
 
   /**
@@ -6,7 +6,38 @@ Page({
    */
   data: {
     //定义查询一分一段表还是录取成绩，默认值false为查询录取成绩
-    rankOrAdmission:false,
+    rankOrAdmission: false,
+    yearArray: ['*', '2014', '2015', '2016', '2017', '2018', '2019'],
+    objectYearArray: [{
+        id: 0,
+        name: '*'
+      },
+      {
+        id: 1,
+        name: '2014'
+      },
+      {
+        id: 2,
+        name: '2015'
+      },
+      {
+        id: 3,
+        name: '2016'
+      },
+      {
+        id: 4,
+        name: '2017'
+      },
+      {
+        id: 5,
+        name: '2018'
+      },
+      {
+        id: 6,
+        name: '2019'
+      }
+    ],
+    yearIndex: 0,
   },
 
   /**
@@ -65,23 +96,30 @@ Page({
 
   },
 
-  clickButton: function (e) {
+  clickButton: function(e) {
     var res = wx.getStorageSync('res');
-    this.setData({ res: res },);
+    this.setData({
+      res: res
+    }, );
   },
 
-  changeRankOrAdmission:function(e){
-    if (e.detail.value == "rank"){
+  bindPickerChange: function(e) {
+    this.setData({
+      yearIndex: e.detail.value
+    })
+  },
+  changeRankOrAdmission: function(e) {
+    if (e.detail.value == "rank") {
       this.setData({
         rankOrAdmission: true,
       })
-    }else{
+    } else {
       this.setData({
         rankOrAdmission: false,
       })
     }
     this.setData({
-      res:[]
+      res: []
     })
 
     console.log(this.data.rankOrAdmission);
@@ -90,13 +128,15 @@ Page({
   formSubmit: function(event) {
     console.log("提交表单");
     console.log(event.detail.value);
-    this.setData({ res: [], });
-    var that=this;
+    this.setData({
+      res: [],
+    });
+    var that = this;
     var url = 'http://localhost:5000/' + event.detail.value.scienceorliberalarts;
     console.log(event.detail.value.rankoradmission);
-    (event.detail.value.rankoradmission == "rank")?
-      url = url+"rank":
-      url= url;
+    (event.detail.value.rankoradmission == "rank") ?
+    url = url + "rank":
+      url = url;
     console.log(url);
     wx.request({
       url: url,
@@ -104,19 +144,23 @@ Page({
         schoolname: event.detail.value.schoolname,
         maxscore: event.detail.value.maxscore,
         minscore: event.detail.value.minscore,
-        year: event.detail.value.year,
+        year: that.data.yearArray[that.data.yearIndex],
       },
       method: 'POST',
-      header: { 'content-type': 'application/x-www-form-urlencoded' },
-      success: function (res) {
+      header: {
+        'content-type': 'application/x-www-form-urlencoded'
+      },
+      success: function(res) {
         wx.hideLoading();
         console.log(res.data, 'category data acquisition success');
-        that.setData({ res: res.data, });
+        that.setData({
+          res: res.data,
+        });
       },
-      fail: function (res) {
+      fail: function(res) {
         console.log('submit fail');
       },
-      complete: function (res) {
+      complete: function(res) {
         console.log('submit complete');
       }
     });

@@ -121,6 +121,31 @@ def base_query_rank(table, science):
                 table.year == year)
         return tables     
 
+# 将高校录取信息查询结果转换为JSON对象用于返回信息给微信小程序
+def queryAdmissionToJson(queryResult):
+    rts=[]
+    for item in queryResult:
+        temp=dict(schoolserial=item.school_serial, 
+            schoolname=item.school_name,
+            admissionscore=item.admission_score, 
+            year=item.admission_year,
+            #school_related_batch是外链
+            batch=item.school_related_batch.batch_name)
+        rts.append(temp)
+
+    return rts
+
+# 将一分一段表查询结果转换为JSON对象用于返回信息给微信小程序
+def queryRankToJson(queryResult):
+    rts=[]
+    for item in queryResult:
+        temp=dict(score=item.score, 
+            studentwithin=item.student_within,
+            studentsum=item.student_sum, 
+            year=item.year)
+        rts.append(temp)
+
+    return rts
 
 """进行验证是否来自微信服务器"""
 """
@@ -145,12 +170,11 @@ def check_source():
 @app.route('/index', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
 def index():
-    return render_template('index.html')
+    return 'Hello World!'
 
 # 查询理科成绩路由
 @app.route('/science', methods=['GET', 'POST'])
 def science():
-    html_url = 'science.html'
 
     #初始化查询返回值变量为空，如果查询结果为空，则返回空值
     queryResult = []
@@ -164,14 +188,7 @@ def science():
     if session.get('science_schoolname'):
         queryResult = base_query_admission(tbl_admission, 0).all()
 
-    for item in queryResult:
-        temp=dict(schoolserial=item.school_serial, 
-            schoolname=item.school_name,
-            admissionscore=item.admission_score, 
-            year=item.admission_year,
-            #school_related_batch是外链
-            batch=item.school_related_batch.batch_name)
-        rts.append(temp)
+    rts = queryAdmissionToJson(queryResult)
 
     return json.dumps(rts,ensure_ascii=False, default=Alchemyencoder) 
 
@@ -188,12 +205,7 @@ def sciencerank():
         session['science_rank_year'] = request.values.get('year')
         queryResult = base_query_rank(tbl_rank, 0).all()
 
-    for item in queryResult:
-        temp=dict(score=item.score, 
-            studentwithin=item.student_within,
-            studentsum=item.student_sum, 
-            year=item.year)
-        rts.append(temp)
+    rts=queryRankToJson(queryResult)
 
     return json.dumps(rts,ensure_ascii=False, default=Alchemyencoder) 
 
@@ -215,18 +227,10 @@ def liberalarts():
     if session.get('liberalarts_schoolname'):
         queryResult = base_query_admission(tbl_admission_liberalart, 1).all()
 
-    for item in queryResult:
-        temp=dict(schoolserial=item.school_serial, 
-            schoolname=item.school_name,
-            admissionscore=item.admission_score, 
-            year=item.admission_year,
-            #school_related_batch是外链
-            batch=item.school_related_batch.batch_name)
-        rts.append(temp)
+    rts = queryAdmissionToJson(queryResult)
 
     return json.dumps(rts,ensure_ascii=False, default=Alchemyencoder) 
 
-    
 # 查询文科一分一段表路由
 @app.route('/liberalartsrank', methods=['GET', 'POST'])
 def liberalartsrank():
@@ -240,11 +244,5 @@ def liberalartsrank():
         session['liberalarts_rank_year'] = request.values.get("year")
         queryResult = base_query_rank(tbl_rank_liberalart, 1).all()
 
-    for item in queryResult:
-        temp=dict(score=item.score, 
-            studentwithin=item.student_within,
-            studentsum=item.student_sum, 
-            year=item.year)
-        rts.append(temp)
-
+    rts=queryRankToJson(queryResult)
     return json.dumps(rts,ensure_ascii=False, default=Alchemyencoder) 

@@ -1,10 +1,12 @@
 <view class="content">
+
   <form bindsubmit="formSubmit" bindreset="formReset">
+
     <view class="inputviewcontent">
 
       <view class="inputitem">
         <view class="inputtitle">学校名称：</view>
-        <input name="schoolname" class="input" auto-focus placeholder="在此输入学校名称" value="*" disabled="{{rankOrAdmission}}"/>
+        <input name="schoolname" class="input" auto-focus placeholder="在此输入学校名称" value="*" disabled="{{rankOrAdmission}}" />
       </view>
 
       <view class="inputitem">
@@ -19,26 +21,33 @@
 
       <view class="inputitem">
         <view class="inputtitle">录取年份：</view>
-        <input name="year" class="input" placeholder="在此输入录取年份" value="*" />
+        <picker class="input" bindchange="bindPickerChange" value="{{yearIndex}}" range="{{yearArray}}">
+          {{yearArray[yearIndex]}}
+        </picker>
       </view>
-
+    </view> <!-- view class="inputviewcontent" -->
+    <view class="inputviewcontent">
       <radio-group name="scienceorliberalarts">
         <label>
           <radio value="science" checked/>理科</label>
         <label>
           <radio value="liberalarts" />文科</label>
       </radio-group>
-
+    </view> <!-- view class="inputviewcontent"--> 
+    
+    <view class="inputviewcontent">
       <radio-group name="rankoradmission" bindchange="changeRankOrAdmission">
         <label>
           <radio value="admission" checked/>高校录取成绩</label>
         <label>
           <radio value="rank" />一分一段表</label>
       </radio-group>
-    </view>
+    </view> <!--view class="inputviewcontent"-->
+
     <view class="btn_area">
       <button formType="submit" type="primary">查询</button>
     </view>
+
   </form>
 
   <view wx:if="{{rankOrAdmission == false}}">
@@ -60,7 +69,7 @@
     </view>
   </view>
   <view wx:else>
-  <view class="table">
+    <view class="table">
       <view class="tr">
         <view class="th">分数</view>
         <view class="th">人数</view>
@@ -75,4 +84,5 @@
       </view>
     </view>
   </view>
-</view>
+
+</view> <!--view class="content--">
